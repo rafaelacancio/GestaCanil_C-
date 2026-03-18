@@ -1,10 +1,13 @@
 ﻿using MongoDB.Driver;
 using GestaoCanil;
 
+// Cria o serviço de ligação à base de dados
 MongoDBService mongoService = new MongoDBService();
 
-List<Cao> listaDeAnimais = new List<Cao>();
+// Lista que guarda os cães em memória
+List<Cao> listaDeCaes = new List<Cao>();
 
+// Array com raças disponíveis
 string[] racas =
 {
     "Indefinido",
@@ -20,8 +23,10 @@ string[] racas =
     "Cocker Spaniel"
 };
 
+
 ExibirMenssagem();
 
+// Mostra menu principal
 ExibirMenu();
 void ExibirMenssagem()
 {
@@ -39,16 +44,21 @@ void ExibirMenssagem()
 
 void ExibirMenu()
 {
-    Console.WriteLine("\n1 - Adicionar animal");
-    Console.WriteLine("2 - Listar animais");
-    Console.WriteLine("3 - Procurar animal");
-    Console.WriteLine("4 - Remover animal");
-    Console.WriteLine("5 - Guardar animais na base de dados");
-    Console.WriteLine("6 - Ler animais da base de dados");
+    Console.WriteLine("\n1 - Adicionar cão (completo)");
+    Console.WriteLine("2 - Registro rápido de cão");
+    Console.WriteLine("3 - Listar cães");
+    Console.WriteLine("4 - Procurar cão");
+    Console.WriteLine("5 - Remover cão");
+    Console.WriteLine("6 - Guardar cães na base de dados");
+    Console.WriteLine("7 - Ler cães da base de dados");
     Console.WriteLine("0 - Sair");
 
     Console.Write("\nDigite sua opção: ");
 
+    // Tenta converter o valor introduzido pelo utilizador (string) para um número inteiro.
+    // O método TryParse evita erros (exceções) caso o utilizador digite algo inválido.
+    // Se a conversão falhar, retorna false e o bloco do if será executado.
+    // Caso tenha sucesso, o valor convertido é armazenado na variável 'opcao'.
     if (!int.TryParse(Console.ReadLine(), out int opcao))
     {
         Console.WriteLine("Opção inválida.");
@@ -63,24 +73,28 @@ void ExibirMenu()
             break;
 
         case 2:
-            ListarAnimais();
+            RegistroRapido();
             break;
 
         case 3:
-            ProcurarAnimal();
+            ListarAnimais();
             break;
 
         case 4:
-            RemoverAnimal();
+            ProcurarAnimal();
             break;
 
         case 5:
+            RemoverAnimal();
+            break;
+
+        case 6:
             GuardarMongoDB();
             Console.Clear();
             ExibirMenu();
             break;
 
-        case 6:
+        case 7:
             LerMongoDB();
             Console.Clear();
             ExibirMenu();
@@ -104,10 +118,13 @@ void AdicionarAnimal()
 
     while (continuar)
     {
-        Console.WriteLine("***** Registrar um novo animal *****");
+        Console.WriteLine("***** Registrar um novo cão *****");
 
-        int id = listaDeAnimais.Count > 0 ? listaDeAnimais.Max(a => a.Id) + 1 : 1;
+        // Gera um ID automático: se existirem cães, usa o maior ID + 1; caso contrário, começa em 1
+        //operador ternário, tem if e else if
+        int id = listaDeCaes.Count > 0 ? listaDeCaes.Max(a => a.Id) + 1 : 1;
 
+        // Validação do nome
         string nome;
         do
         {
@@ -116,6 +133,7 @@ void AdicionarAnimal()
         }
         while (string.IsNullOrWhiteSpace(nome));
 
+        // Validação da idade
         int idade;
         Console.Write("Idade: ");
         while (!int.TryParse(Console.ReadLine(), out idade) || idade < 0)
@@ -123,6 +141,7 @@ void AdicionarAnimal()
             Console.Write("Idade inválida. Digite novamente: ");
         }
 
+        // Validação do peso
         double peso;
         Console.Write("Peso: ");
         while (!double.TryParse(Console.ReadLine(), out peso) || peso <= 0)
@@ -130,6 +149,7 @@ void AdicionarAnimal()
             Console.Write("Peso inválido. Digite novamente: ");
         }
 
+        // Escolha da raça
         Console.WriteLine("Escolha uma raça:");
 
         for (int i = 0; i < racas.Length; i++)
@@ -148,13 +168,16 @@ void AdicionarAnimal()
         Console.Write("Porte: ");
         string porte = Console.ReadLine()!;
 
+        // Cria objeto Cao
         Cao novoCao = new Cao(id, nome, idade, peso, raca, porte);
 
-        listaDeAnimais.Add(novoCao);
+        // Adiciona à lista
+        listaDeCaes.Add(novoCao);
 
         Console.WriteLine("Animal registrado com sucesso!");
 
-        Console.Write("\nDeseja adicionar outro animal? (s/n): ");
+        // Pergunta se quer continuar
+        Console.Write("\nDeseja adicionar outro cão? (s/n): ");
         string resposta = Console.ReadLine()!.ToLower();
 
         if (resposta != "s")
@@ -168,20 +191,70 @@ void AdicionarAnimal()
     VoltarMenu();
 }
 
+void RegistroRapido()
+{
+    Console.Clear();
+
+    Console.WriteLine("***** Registro rápido de cão *****");
+
+    int id = listaDeCaes.Count > 0 ? listaDeCaes.Max(a => a.Id) + 1 : 1;
+
+    string nome;
+    do
+    {
+        Console.Write("Nome: ");
+        nome = Console.ReadLine()!;
+    }
+    while (string.IsNullOrWhiteSpace(nome));
+
+    int idade;
+    Console.Write("Idade: ");
+    while (!int.TryParse(Console.ReadLine(), out idade) || idade < 0)
+    {
+        Console.Write("Idade inválida. Digite novamente: ");
+    }
+
+    Console.WriteLine("Escolha uma raça:");
+
+    for (int i = 0; i < racas.Length; i++)
+    {
+        Console.WriteLine($"{i} - {racas[i]}");
+    }
+
+    int escolha;
+    while (!int.TryParse(Console.ReadLine(), out escolha) || escolha < 0 || escolha >= racas.Length)
+    {
+        Console.Write("Escolha inválida. Digite novamente: ");
+    }
+
+    string raca = racas[escolha];
+
+    // Cria cão com menos dados
+    Cao novoCao = new Cao(nome, idade, raca);
+
+    // Define ID manualmente
+    novoCao.Id = id;
+
+    listaDeCaes.Add(novoCao);
+
+    Console.WriteLine("Cão registado rapidamente com sucesso!");
+
+    VoltarMenu();
+}
+
 void ListarAnimais()
 {
     Console.Clear();
-    Console.WriteLine("***** Lista de animais *****");
+    Console.WriteLine("***** Lista de cães *****");
 
-    if (listaDeAnimais.Count == 0)
+    if (listaDeCaes.Count == 0)
     {
-        Console.WriteLine("Nenhum animal registrado.");
+        Console.WriteLine("Nenhum cão registrado.");
     }
     else
     {
-        foreach (Cao animal in listaDeAnimais)
+        foreach (Cao animal in listaDeCaes)
         {
-            Console.WriteLine("******************");
             Console.WriteLine(animal);
         }
     }
@@ -192,14 +265,16 @@ void ProcurarAnimal()
 {
     Console.Clear();
 
-    Console.Write("Digite o nome do animal: ");
+    Console.Write("Digite o nome do cão: ");
     string nome = Console.ReadLine()!;
 
-    foreach (Cao animal in listaDeAnimais)
+    // Procura na lista
+    foreach (Cao animal in listaDeCaes)
     {
+        //Compara o nome do animal com o nome digitado pelo utilizador, ignorando maiúsculas e minúsculas.
         if (animal.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine("Animal encontrado:");
+            Console.WriteLine("*****Cão encontrado*****");
             Console.WriteLine(animal);
             Console.WriteLine("\nPressione qualquer tecla para voltar ao menu...");
             Console.ReadKey();
@@ -209,7 +284,7 @@ void ProcurarAnimal()
         }
     }
 
-    Console.WriteLine("Animal não encontrado.");
+    Console.WriteLine("Cão não encontrado.");
     VoltarMenu();
 }
 
@@ -217,23 +292,28 @@ void RemoverAnimal()
 {
     Console.Clear();
 
-    Console.Write("Digite o Id do animal: ");
-    int id = int.Parse(Console.ReadLine()!);
+    Console.Write("Digite o Id do cão: ");
+    int id = int.Parse(Console.ReadLine()!);//Console.ReadLine()! = “Indica que o valor não será null.”
 
-    Cao? animalRemover = listaDeAnimais.Find(a => a.Id == id);
+    // Procura na lista de cães o primeiro elemento cujo Id seja igual ao valor introduzido pelo utilizador.
+    // O método Find percorre a lista e aplica a condição definida pela expressão lambda (a => a.Id == id).
+    // A variável 'a' representa cada elemento da lista durante a procura.
+    // Se encontrar um cão com o Id correspondente, esse objeto é retornado.
+    // Caso contrário, o método retorna null.
+    // Por isso, a variável é declarada como 'Cao?' para indicar que pode armazenar um objeto ou null.
+    Cao? animalRemover = listaDeCaes.Find(a => a.Id == id);
 
     if (animalRemover != null)
     {
-        listaDeAnimais.Remove(animalRemover);
+        listaDeCaes.Remove(animalRemover);
 
-        // Atualiza MongoDB
-        mongoService.GuardarAnimais(listaDeAnimais);
+        mongoService.GuardarAnimais(listaDeCaes);
 
-        Console.WriteLine("Animal removido com sucesso!");
+        Console.WriteLine("Cão removido com sucesso!");
     }
     else
     {
-        Console.WriteLine("Animal não encontrado.");
+        Console.WriteLine("Cão não encontrado.");
     }
 
     VoltarMenu();
@@ -241,37 +321,35 @@ void RemoverAnimal()
 
 void GuardarMongoDB()
 {
-    if (listaDeAnimais.Count == 0)
+    if (listaDeCaes.Count == 0)
     {
-        Console.WriteLine("Não existem animais para guardar.");
+        Console.WriteLine("Não existem cães para guardar.");
         VoltarMenu();
         return;
     }
 
-    mongoService.GuardarAnimais(listaDeAnimais);
+    mongoService.GuardarAnimais(listaDeCaes);
 
-    //operador ternário para exibir a mensagem correta
-    Console.WriteLine(listaDeAnimais.Count == 1 ? "1 animal guardado na base de dados."
-    : $"{listaDeAnimais.Count} animais guardados na base de dados."
-);
+    Console.WriteLine(listaDeCaes.Count == 1 ? "1 cão guardado na base de dados."
+     : $"{listaDeCaes.Count} cães guardados na base de dados.");
     VoltarMenu();
 }
 
 void LerMongoDB()
 {
-    listaDeAnimais = mongoService.LerAnimais();
+    listaDeCaes = mongoService.LerAnimais();
 
-    if (listaDeAnimais.Count == 0)
+    if (listaDeCaes.Count == 0)
     {
-        Console.WriteLine("Nenhum animal encontrado na base de dados.");
+        Console.WriteLine("Nenhum cão encontrado na base de dados.");
     }
-    else if (listaDeAnimais.Count == 1)
+    else if (listaDeCaes.Count == 1)
     {
-        Console.WriteLine("1 animal carregado da base de dados.");
+        Console.WriteLine("1 cão carregado da base de dados.");
     }
     else
     {
-        Console.WriteLine($"{listaDeAnimais.Count} animais carregados da base de dados.");
+        Console.WriteLine($"{listaDeCaes.Count} cães carregados da base de dados.");
     }
 
     ListarAnimais();
